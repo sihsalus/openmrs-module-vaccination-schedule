@@ -27,6 +27,12 @@
 		
 	<bean id="patientVaccinationStatusRestController" 
 		class="org.openmrs.module.vaccinationschedule.web.rest.PatientVaccinationStatusResource" />
+		
+	<bean id="vaccinationAdministrationRestController" 
+		class="org.openmrs.module.vaccinationschedule.web.rest.VaccinationAdministrationResource" />
+		
+	<bean id="immunizationCompatibilityController" 
+		class="org.openmrs.module.vaccinationschedule.web.rest.ImmunizationCompatibilityController" />
 
 
 </beans>

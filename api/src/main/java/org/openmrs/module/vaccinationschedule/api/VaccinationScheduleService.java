@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.openmrs.Concept;
 import org.openmrs.Encounter;
+import org.openmrs.Location;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.annotation.Authorized;
@@ -159,4 +160,49 @@ public interface VaccinationScheduleService extends OpenmrsService {
 	
 	@Authorized(VIEW_VACCINATION_SCHEDULES)
 	List<VaccinationScheduleEntry> getNextRecommendedVaccinations(Patient patient, int maxResults);
+	
+	// CRITICAL: Vaccination Administration methods - Links schedules to actual vaccinations
+	
+	@Authorized(ADMINISTER_VACCINES)
+	VaccinationAdministration saveVaccinationAdministration(VaccinationAdministration administration);
+	
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	VaccinationAdministration getVaccinationAdministration(Integer administrationId);
+	
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	VaccinationAdministration getVaccinationAdministrationByUuid(String uuid);
+	
+	@Authorized(ADMINISTER_VACCINES)
+	void deleteVaccinationAdministration(VaccinationAdministration administration);
+	
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	List<VaccinationAdministration> getVaccinationAdministrationsByPatient(Patient patient);
+	
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	List<VaccinationAdministration> getVaccinationAdministrationsByPatient(Patient patient, Date startDate, Date endDate);
+	
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	List<VaccinationAdministration> getVaccinationAdministrationsByEncounter(Encounter encounter);
+	
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	List<VaccinationAdministration> getVaccinationAdministrationsByLocation(Location location, Date startDate, Date endDate);
+	
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	List<VaccinationAdministration> getVaccinationAdministrationsByScheduleEntry(VaccinationScheduleEntry entry);
+	
+	/**
+	 * Find administrations for a specific patient and vaccine concept Used to determine vaccination
+	 * history
+	 */
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	List<VaccinationAdministration> getVaccinationAdministrationsByPatientAndVaccine(Patient patient,
+	        Concept vaccineConcept);
+	
+	/**
+	 * Check if a patient has received a specific dose of a vaccine Critical for determining vaccination
+	 * status
+	 */
+	@Authorized(VIEW_VACCINATION_SCHEDULES)
+	VaccinationAdministration getVaccinationAdministrationByPatientEntryAndDose(Patient patient,
+	        VaccinationScheduleEntry entry, Integer doseNumber);
 }

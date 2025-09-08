@@ -1,15 +1,20 @@
 package org.openmrs.module.vaccinationschedule.api.dao.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.openmrs.Encounter;
+import org.openmrs.Location;
 import org.openmrs.Patient;
 import org.openmrs.api.db.hibernate.DbSession;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.module.vaccinationschedule.api.dao.VaccinationScheduleDao;
 import org.openmrs.module.vaccinationschedule.model.PatientVaccinationSchedule;
+import org.openmrs.module.vaccinationschedule.model.VaccinationAdministration;
 import org.openmrs.module.vaccinationschedule.model.VaccinationSchedule;
 import org.openmrs.module.vaccinationschedule.model.VaccinationScheduleEntry;
 import org.openmrs.module.vaccinationschedule.model.VaccinationScheduleRule;
@@ -229,5 +234,163 @@ public class VaccinationScheduleDaoImpl implements VaccinationScheduleDao {
 		return getSession().createCriteria(PatientVaccinationSchedule.class)
 		        .add(Restrictions.eq("vaccinationSchedule.scheduleId", schedule.getScheduleId()))
 		        .add(Restrictions.eq("voided", false)).list();
+	}
+	
+	// CRITICAL: Vaccination Administration DAO methods
+	
+	@Override
+	public VaccinationAdministration getVaccinationAdministration(Integer administrationId) {
+		if (administrationId == null || administrationId <= 0) {
+			return null;
+		}
+		
+		Object result = getSession().get(VaccinationAdministration.class, administrationId);
+		if (result instanceof VaccinationAdministration) {
+			return (VaccinationAdministration) result;
+		}
+		return null;
+	}
+	
+	@Override
+	public VaccinationAdministration getVaccinationAdministrationByUuid(String uuid) {
+		if (uuid == null || uuid.trim().isEmpty()) {
+			return null;
+		}
+		
+		Object result = getSession().createCriteria(VaccinationAdministration.class)
+		        .add(Restrictions.eq("uuid", uuid.trim())).uniqueResult();
+		
+		if (result instanceof VaccinationAdministration) {
+			return (VaccinationAdministration) result;
+		}
+		return null;
+	}
+	
+	@Override
+	public VaccinationAdministration saveVaccinationAdministration(VaccinationAdministration administration) {
+		if (administration == null) {
+			throw new IllegalArgumentException("VaccinationAdministration cannot be null");
+		}
+		
+		getSession().saveOrUpdate(administration);
+		return administration;
+	}
+	
+	@Override
+	public void deleteVaccinationAdministration(VaccinationAdministration administration) {
+		if (administration != null) {
+			getSession().delete(administration);
+		}
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<VaccinationAdministration> getAdministrationsByPatient(Patient patient) {
+		if (patient == null) {
+			return new ArrayList<>();
+		}
+		
+		return getSession().createCriteria(VaccinationAdministration.class)
+		        .add(Restrictions.eq("patient.patientId", patient.getPatientId())).add(Restrictions.eq("voided", false))
+		        .addOrder(Order.desc("administrationDate")).list();
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<VaccinationAdministration> getAdministrationsByPatient(Patient patient, Date startDate, Date endDate) {
+		if (patient == null) {
+			return new ArrayList<>();
+		}
+		
+		Criteria criteria = getSession().createCriteria(VaccinationAdministration.class)
+		        .add(Restrictions.eq("patient.patientId", patient.getPatientId())).add(Restrictions.eq("voided", false));
+		
+		if (startDate != null) {
+			criteria.add(Restrictions.ge("administrationDate", startDate));
+		}
+		if (endDate != null) {
+			criteria.add(Restrictions.le("administrationDate", endDate));
+		}
+		
+		return criteria.addOrder(Order.desc("administrationDate")).list();
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<VaccinationAdministration> getAdministrationsByEncounter(Encounter encounter) {
+		if (encounter == null) {
+			return new ArrayList<>();
+		}
+		
+		return getSession().createCriteria(VaccinationAdministration.class)
+		        .add(Restrictions.eq("encounter.encounterId", encounter.getEncounterId()))
+		        .add(Restrictions.eq("voided", false)).addOrder(Order.asc("administrationDate")).list();
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<VaccinationAdministration> getAdministrationsByLocation(Location location, Date startDate, Date endDate) {
+		if (location == null) {
+			return new ArrayList<>();
+		}
+		
+		Criteria criteria = getSession().createCriteria(VaccinationAdministration.class)
+		        .add(Restrictions.eq("location.locationId", location.getLocationId())).add(Restrictions.eq("voided", false));
+		
+		if (startDate != null) {
+			criteria.add(Restrictions.ge("administrationDate", startDate));
+		}
+		if (endDate != null) {
+			criteria.add(Restrictions.le("administrationDate", endDate));
+		}
+		
+		return criteria.addOrder(Order.desc("administrationDate")).list();
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<VaccinationAdministration> getAdministrationsByScheduleEntry(VaccinationScheduleEntry entry) {
+		if (entry == null) {
+			return new ArrayList<>();
+		}
+		
+		return getSession().createCriteria(VaccinationAdministration.class)
+		        .add(Restrictions.eq("vaccinationScheduleEntry.entryId", entry.getEntryId()))
+		        .add(Restrictions.eq("voided", false)).addOrder(Order.desc("administrationDate")).list();
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<VaccinationAdministration> getAdministrationsByPatientAndVaccine(Patient patient,
+	        org.openmrs.Concept vaccineConcept) {
+		if (patient == null || vaccineConcept == null) {
+			return new ArrayList<>();
+		}
+		
+		return getSession().createCriteria(VaccinationAdministration.class).createAlias("vaccinationScheduleEntry", "entry")
+		        .add(Restrictions.eq("patient.patientId", patient.getPatientId()))
+		        .add(Restrictions.eq("entry.vaccineConcept.conceptId", vaccineConcept.getConceptId()))
+		        .add(Restrictions.eq("voided", false)).addOrder(Order.asc("entry.doseNumber"))
+		        .addOrder(Order.desc("administrationDate")).list();
+	}
+	
+	@Override
+	public VaccinationAdministration getAdministrationByPatientEntryAndDose(Patient patient, VaccinationScheduleEntry entry,
+	        Integer doseNumber) {
+		if (patient == null || entry == null || doseNumber == null) {
+			return null;
+		}
+		
+		Object result = getSession().createCriteria(VaccinationAdministration.class)
+		        .createAlias("vaccinationScheduleEntry", "entry")
+		        .add(Restrictions.eq("patient.patientId", patient.getPatientId()))
+		        .add(Restrictions.eq("entry.entryId", entry.getEntryId()))
+		        .add(Restrictions.eq("entry.doseNumber", doseNumber)).add(Restrictions.eq("voided", false))
+		        .addOrder(Order.desc("administrationDate")).setMaxResults(1).uniqueResult();
+		
+		if (result instanceof VaccinationAdministration) {
+			return (VaccinationAdministration) result;
+		}
+		return null;
 	}
 }

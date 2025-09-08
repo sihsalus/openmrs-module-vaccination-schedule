@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.openmrs.module.vaccinationschedule.model">
+
+    <class name="VaccinationAdministration" table="vaccination_administration">
+        <id name="administrationId" column="administration_id">
+            <generator class="native"/>
+        </id>
+        
+        <property name="uuid" column="uuid" length="38" not-null="true" unique="true"/>
+        
+        <!-- Core relationships -->
+        <many-to-one name="patient" class="org.openmrs.Patient" column="patient_id" not-null="true"/>
+        <many-to-one name="vaccinationScheduleEntry" class="VaccinationScheduleEntry" column="entry_id" not-null="true"/>
+        
+        <!-- CRITICAL: Integration with OpenMRS core -->
+        <many-to-one name="obs" class="org.openmrs.Obs" column="obs_id" not-null="true"/>
+        <many-to-one name="encounter" class="org.openmrs.Encounter" column="encounter_id" not-null="true"/>
+        <many-to-one name="location" class="org.openmrs.Location" column="location_id"/>
+        <many-to-one name="provider" class="org.openmrs.Provider" column="provider_id"/>
+        <many-to-one name="visit" class="org.openmrs.Visit" column="visit_id"/>
+        
+        <!-- Administration details -->
+        <property name="administrationDate" column="administration_date" type="timestamp" not-null="true"/>
+        <many-to-one name="administeredBy" class="org.openmrs.User" column="administered_by" not-null="true"/>
+        <property name="doseAdministered" column="dose_administered" type="big_decimal"/>
+        <property name="doseUnits" column="dose_units" length="50"/>
+        <property name="lotNumber" column="lot_number" length="50"/>
+        <property name="expiryDate" column="expiry_date" type="date"/>
+        <property name="manufacturer" column="manufacturer" length="255"/>
+        <property name="siteAdministered" column="site_administered" length="100"/>
+        <property name="routeAdministered" column="route_administered" length="100"/>
+        <property name="adverseReaction" column="adverse_reaction" type="text"/>
+        <property name="notes" column="notes" type="text"/>
+        
+        <property name="status" column="status" not-null="true">
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">org.openmrs.module.vaccinationschedule.model.VaccinationAdministration$Status</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        
+        <!-- Standard OpenMRS audit fields -->
+        <property name="voided" column="voided" type="boolean" not-null="true"/>
+        <many-to-one name="voidedBy" class="org.openmrs.User" column="voided_by"/>
+        <property name="dateVoided" column="date_voided" type="timestamp"/>
+        <property name="voidReason" column="void_reason" length="255"/>
+        
+        <many-to-one name="creator" class="org.openmrs.User" column="creator" not-null="true"/>
+        <property name="dateCreated" column="date_created" type="timestamp" not-null="true"/>
+        <many-to-one name="changedBy" class="org.openmrs.User" column="changed_by"/>
+        <property name="dateChanged" column="date_changed" type="timestamp"/>
+    </class>
+
+</hibernate-mapping>

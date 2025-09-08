@@ -351,4 +351,157 @@
         </insert>
     </changeSet>
 
+    <!-- CRITICAL: Vaccination Administration Table - Links schedules to actual vaccinations -->
+    <changeSet id="vaccination_administration-2024-12-19-05" author="openmrs">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="vaccination_administration"/></not>
+        </preConditions>
+        <comment>Table to track actual vaccine administrations with full OpenMRS integration</comment>
+        <createTable tableName="vaccination_administration">
+            <column name="administration_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="uuid" type="char(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <!-- Core relationships -->
+            <column name="patient_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entry_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <!-- CRITICAL: Integration with OpenMRS core -->
+            <column name="obs_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="encounter_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="int"/>
+            <column name="provider_id" type="int"/>
+            <column name="visit_id" type="int"/>
+            <!-- Administration details -->
+            <column name="administration_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="administered_by" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dose_administered" type="decimal(10,2)"/>
+            <column name="dose_units" type="varchar(50)"/>
+            <column name="lot_number" type="varchar(50)"/>
+            <column name="expiry_date" type="date"/>
+            <column name="manufacturer" type="varchar(255)"/>
+            <column name="site_administered" type="varchar(100)"/>
+            <column name="route_administered" type="varchar(100)"/>
+            <column name="adverse_reaction" type="text"/>
+            <column name="notes" type="text"/>
+            <column name="status" type="varchar(20)" defaultValue="COMPLETED">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Standard OpenMRS audit fields -->
+            <column name="voided" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="voided_by" type="int"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="void_reason" type="varchar(255)"/>
+            <column name="creator" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="int"/>
+            <column name="date_changed" type="datetime"/>
+        </createTable>
+
+        <!-- CRITICAL: Foreign key constraints to OpenMRS core tables -->
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="patient_id"
+                                 referencedTableName="patient"
+                                 referencedColumnNames="patient_id"
+                                 constraintName="fk_admin_patient"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="entry_id"
+                                 referencedTableName="vaccination_schedule_entry"
+                                 referencedColumnNames="entry_id"
+                                 constraintName="fk_admin_entry"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="obs_id"
+                                 referencedTableName="obs"
+                                 referencedColumnNames="obs_id"
+                                 constraintName="fk_admin_obs"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="encounter_id"
+                                 referencedTableName="encounter"
+                                 referencedColumnNames="encounter_id"
+                                 constraintName="fk_admin_encounter"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="location_id"
+                                 referencedTableName="location"
+                                 referencedColumnNames="location_id"
+                                 constraintName="fk_admin_location"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="provider_id"
+                                 referencedTableName="provider"
+                                 referencedColumnNames="provider_id"
+                                 constraintName="fk_admin_provider"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="visit_id"
+                                 referencedTableName="visit"
+                                 referencedColumnNames="visit_id"
+                                 constraintName="fk_admin_visit"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="administered_by"
+                                 referencedTableName="users"
+                                 referencedColumnNames="user_id"
+                                 constraintName="fk_admin_administered_by"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="creator"
+                                 referencedTableName="users"
+                                 referencedColumnNames="user_id"
+                                 constraintName="fk_admin_creator"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="voided_by"
+                                 referencedTableName="users"
+                                 referencedColumnNames="user_id"
+                                 constraintName="fk_admin_voided_by"/>
+
+        <addForeignKeyConstraint baseTableName="vaccination_administration"
+                                 baseColumnNames="changed_by"
+                                 referencedTableName="users"
+                                 referencedColumnNames="user_id"
+                                 constraintName="fk_admin_changed_by"/>
+
+        <!-- Performance indexes -->
+        <createIndex tableName="vaccination_administration" indexName="idx_admin_patient_date">
+            <column name="patient_id"/>
+            <column name="administration_date"/>
+        </createIndex>
+
+        <createIndex tableName="vaccination_administration" indexName="idx_admin_encounter">
+            <column name="encounter_id"/>
+        </createIndex>
+
+        <createIndex tableName="vaccination_administration" indexName="idx_admin_obs">
+            <column name="obs_id"/>
+        </createIndex>
+
+        <createIndex tableName="vaccination_administration" indexName="idx_admin_location_date">
+            <column name="location_id"/>
+            <column name="administration_date"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
