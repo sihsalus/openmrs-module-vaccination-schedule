@@ -5,7 +5,7 @@
 	<!-- Base Module Properties -->
 	<id>${project.parent.artifactId}</id>
 	<name>${project.parent.name}</name>
-	<version>1.0.8</version>
+	<version>1.0.9</version>
 	<package>org.openmrs.module.vaccinationschedule</package>
 	<author>PeruHCE</author>
 	<description>
